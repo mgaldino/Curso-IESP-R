@@ -55,6 +55,13 @@ environment(sum)
 # Um paper dos criadores do R sobre o escopo da linguagem.
 # https://www.stat.auckland.ac.nz/~ihaka/downloads/lexical.pdf
 
+# "In R the scoping rules state that the free variables in a function are resolved 
+# in the environment that was active at the time the function was created. In S the scope
+# rules state that the free variables are resolved at top-level" 
+# (Robert Gentleman and Ross Ihaka, p. 4).
+
+## Outras ref.: http://www.johndcook.com/blog/2008/10/16/default-arguments-and-lazy-evaluation-in-r/
+
 
 f <- function(x) {
   y <- 2 * x 
@@ -112,7 +119,51 @@ for ( i in 1:20) h(x[i])
 # Vocês podem ler um texto explicando as diferenças conceituais entre escopo léxico e
 # espoco dinâmico aqui:
 # http://darrenjw.wordpress.com/2011/11/23/lexical-scope-and-function-closures-in-r/
-# Eu vou explicar como o escopo funciona no R por meio de um exemplo
+# Eu vou explicar como o escopo funciona no R por meio de exemplos
+
+fun1 <- function (x) {
+  x + y
+}
+
+# quiz: qual variável é livre em fun1?
+
+
+## Agora olhemos o caso mais interessante, fun2
+
+fun2 <- function () {
+  y <- 20
+  function (x) x + y
+}
+
+# fun1 foi criada no ambiente global. É um caso fácil
+# fun2 tbm foi criada no ambiente global. Mas tem uma função anônima, igual a fun1
+# que foi criada no ambiente local
+# fun2 retorna uma função como objeto!
+# igual a fun1, mas criada localmente
+# a função anônima usa o valor de y no ambiente onde foi criada, ou seja, dentro de fun2
+
+# o valor de fun1 depende do valor de y no ambiente global
+
+fun1(3)
+#> Error in fun1(3) : object 'y' not found
+
+y <- 10
+fun1(3)
+#> [1] 13
+
+y <- 13
+fun1(3)
+#> [1] 16
+
+fun3 <- fun2()
+
+y
+fun1(3)
+
+fun3(3)
+
+y
+fun3
 
 ## Não executem o código abaixo.
 ## Apenas leiam o c[odigo e respondam
