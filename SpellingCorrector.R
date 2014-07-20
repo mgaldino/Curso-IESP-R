@@ -78,5 +78,18 @@ microbenchmark(
 
 Sys.sleep(2)
 
+#####
+# Naive Bayes
+##
+
+# No problrma de Spelling corrector, queremos sugerir uma palavra dado o que o usuário escreveu.
+# Modelando esse problema, nós queremos sugerir uma palavra w_i, dado que a pessoa escreveu w_k
+# Como nós nunca temos certeza qual a palavras que o usuário quis dizer 
+# (ex.: se digita post, quis dizer posto ou poste?) a abordagem probabilística é adequada
+# 
+# Basicamente, queremos saber qual a probabilidade de a palavra desejada ser w_i, dado que
+# o usuário escreveu w_k. Matematicamente, Prob(w_i|w_k). E queremos computar essa probabilidade
+# para cada palavra k que pode ser digitada e cada palavra i que pode ser a desejada.
+
 
 
