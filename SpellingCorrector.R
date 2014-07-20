@@ -5,6 +5,10 @@
 ###################################
 
 
+## pegando wordlist do opensubtitle
+http://invokeit.wordpress.com/frequency-word-lists/
+  
+  
 ## Baseado em: http://norvig.com/spell-correct.html
 
 wget -w 2 -m -H http://www.gutenberg.org/robot/harvest?filetypes[]=txt&langs[]=pt
