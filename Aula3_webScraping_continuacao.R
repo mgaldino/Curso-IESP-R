@@ -4,6 +4,10 @@
 #### Continuação               ####
 ###################################
 
+# definindo diretorio
+setwd('D:\\2014\\aulas\\IESP\\scripts\\Curso-IESP-R-aula')
+
+
 ## Agora que nós sabemos fazer raspagem, vamos sair por ai coletando milhões de dados?
 
 ## Antes, algumas boas práticas
@@ -46,7 +50,114 @@ setInternet2(TRUE)
 
 options(timeout=500)
 
-# definindo diretorio
-setwd('D:\\2014\\aulas\\IESP\\scripts\\Curso-IESP-R-aula')
+## Pra evitar sobrecarregar os servidores, vamos usar
+# Sys.sleep
+
+?Sys.sleep
+
+
+BuscaInfoPronunciamentos <- function(vetorNomes, vetorUF, dataInicio, dataFinal, k){  
+  # Fun??o que busca informa??es dos pronunciamentos dos parlamentares 
+  # utilizando um vetor de nomes, um vetor de ufs, as datas de inicio e 
+  # final do periodo desejado e o numero de pronunciamentos obtidos por vez (maximo de 1000).
+  # retorna uma lista com tres elementos: contabiliza o numero de pronunciamentos,
+  # contabiliza o numero de parlamentares e, por fim, retorna os dados dos pronunciamentos
+  if(require(seqinr) == F) install.packages("seqinr")
+  dados <- list()
+  vetorNomes <- trimSpace(vetorNomes)  # removendo espa?os do inicio e do final
+  vetorNomes <- gsub(" ", '%20', vetorNomes)  
+  dataInicio <- gsub("/", "%2F", dataInicio)
+  dataFinal <- gsub("/", "%2F", dataFinal)
+  nParlamentares <- 0
+  totalPronunciamentos <- 0
+  for  (i in 1:length(vetorNomes)){
+    currentPage <- 1  # define pagina inicial da busca
+    # Link que ser? procurado
+    link <- url(paste("http://www.camara.gov.br/internet/sitaqweb/resultadoPesquisaDiscursos.asp?txIndexacao=&CurrentPage=",
+                      currentPage,
+                      "&BasePesq=plenario&txOrador=", 
+                      vetorNomes[i],
+                      "&txPartido=",
+                      "&dtInicio=",
+                      dataInicio,
+                      "&dtFim=",
+                      dataFinal, 
+                      "&txUF=",
+                      vetorUF[i], 
+                      #listaFaseSessao=1 - pequeno expediente
+                      # Legislatura=52
+                      "&txSessao=&listaTipoSessao=&listaTipoInterv=&inFalaPres=&listaTipoFala=&listaFaseSessao=&txAparteante=&listaEtapa=&CampoOrdenacao=dtSessao", 
+                      "&TipoOrdenacao=DESC&PageSize=", 
+                      k,
+                      "&txTexto=&txSumario=", 
+                      sep=''))  
+    # lendo c?digo da p?gina
+    #    setInternet2(use = TRUE)
+    dados[[i]] <- readLines(link, encoding = "UTF-8")  
+    close(link)  # fechando conex?o
+    # verificando de h? ou n?o um discurso na p?gina
+    semPronunciamento <- grepl('Nenhum discurso encontrado.', dados[[i]])
+    # caso n?o haja discurso, seguir para o pr?ximo parlamentar
+    if(sum(semPronunciamento) > 0){
+      dados[[i]] <- NA
+      next  # proximo i
+    } 
+    # conta o numero de parlamentares com discurso
+    nParlamentares <- nParlamentares + 1 
+    
+    # regex para obter total de discursos do parlamentar                    
+    padraoNum <- '<span class=\"visualStrong\">[[:digit:]]+\\.*[[:digit:]]*</span>'  
+    listaNum <- grep(padraoNum, dados[[i]], value=T)  # refinando dados  
+    
+    num <- 0 # vari?vel que receber? o total de discursos do parlamentar
+    num <- substr(listaNum, regexpr("([[:alpha:]]+|[[:blank:]]+|[[:punct:]]+)>", listaNum)+2, regexpr("</span>", listaNum)-1)  # nomes dos deputados
+    num <- gsub("\\.", '', num)
+    num <- as.numeric(num)
+    totalPronunciamentos <- totalPronunciamentos + num  # somando o total de discursos obtidos
+    # caso exista mais de uma p?gina por nome de deputado: num > 1000
+    pageSize <- k  # numero max de registros ja obtidos
+    
+    while (num > 0 & num  > pageSize){
+      print(paste("Esse deputado", i, "tem mais de", k, "discursos. Total de", num, sep=' '))
+      currentPage <- currentPage + 1  # incrementando pag
+      # atualizando link com nova current page                  
+      link <- url(paste("http://www.camara.gov.br/internet/sitaqweb/resultadoPesquisaDiscursos.asp?txIndexacao=&CurrentPage=",
+                        currentPage,
+                        "&BasePesq=plenario&txOrador=", 
+                        vetorNomes[i],
+                        "&txPartido=",
+                        "&dtInicio=",
+                        dataInicio,
+                        "&dtFim=",
+                        dataFinal, 
+                        "&txUF=",
+                        vetorUF[i], 
+                        #listaFaseSessao=1 - pequeno expediente
+                        # Legislatura=52
+                        "&txSessao=&listaTipoSessao=&listaTipoInterv=&inFalaPres=&listaTipoFala=&listaFaseSessao=&txAparteante=&listaEtapa=&CampoOrdenacao=dtSessao",
+                        "&TipoOrdenacao=DESC&PageSize=",
+                        k,
+                        "&txTexto=&txSumario=", 
+                        sep=''))  
+      # concatenando vetor com os novos dados do parlamentar i
+      #     setInternet2(use = TRUE)
+      dados[[i]] <- c(dados[[i]], readLines(link, encoding = "UTF-8"))  # adicionando novos dados
+      close(link) # fechando conex?o
+      pageSize <- pageSize + k  # incrementando numero max de registros obtidos
+    }
+    
+    print(paste("Voc? j? pesquisou", i , "deputado(s) de", length(vetorNomes), sep=' '))
+    #Sys.sleep(5)  # faz o R esperar n segundos para continuar
+    gc()
+  }
+  listaDados <- list("dados" = dados, "nDiscursos" = totalPronunciamentos, "nParlamentares" = nParlamentares)
+  return(listaDados)
+}
+
+
+
+http://stackoverflow.com/questions/16601520/what-if-i-want-to-web-scrape-with-r-for-a-page-with-parameters/16860430#16860430
+
+
 
 
