@@ -301,7 +301,7 @@ microbenchmark(
   mean2(x)
 )
 
-### 
+### Leitura adicional sobre funções
 http://nicercode.github.io/guides/functions/
 
 
