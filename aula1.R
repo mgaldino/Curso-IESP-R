@@ -62,6 +62,9 @@ environment(sum)
 
 ## Outras ref.: http://www.johndcook.com/blog/2008/10/16/default-arguments-and-lazy-evaluation-in-r/
 
+## Entendendo Escopo com exemplos
+
+## definindo variáveis livres, formals e variáveis locais
 
 f <- function(x) {
   y <- 2 * x 
@@ -111,7 +114,7 @@ h <- function (x) {
 
 set.seed(2)
 x <- rnorm(20, 0, 50)
-for ( i in 1:20) h(x[i])
+for ( i in 1:20) print(h(x[i]))
 
 
 ### Escopo léxico
