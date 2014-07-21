@@ -167,11 +167,18 @@ microbenchmark(
 ## podemos usar enableJIT(3) no começo do nosso codigo
 ## isso irá compilar todas as funções criadas a partir daquele momento, naquela sessão
 
-require(compiler)
-enableJIT(3)
+#require(compiler)
+#enableJIT(3)
 
 #Pra desabilitar a compilação, basta rodar enableJIT(0)
 # as funções já compiladas continuarão compiladas
 # mas as novas funções não serão compiladas.
 # não é possivel descompilar, exceto criando de novo a função.
+
+## too good to be true?
+## Dúvida: como ficam as variáveis livres? E a questão do escopo
+## e with, que supostamente não usa escopo léxico?
+## Boas questões... Fiquem atentos
+## Tem um custo pra compilar. Se for usar a função poucas vezes e ela for rápida, eja se compensa
+## experimente...
 
