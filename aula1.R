@@ -112,9 +112,34 @@ h <- function (x) {
   return(y)
 }
 
+## como poderia fazer o teste?
+## testes manuais
+print(h(10))
+print(h(-3))
+print(h(0))
+print(h(34.566))
+
 set.seed(2)
 x <- rnorm(20, 0, 50)
-for ( i in 1:20) print(h(x[i]))
+x
+summary(x)
+sd(x)
+## Entendendo o loop ou laço
+
+print(h(x[1]))
+print(h(x[2]))
+print(h(x[3]))
+...
+print(h(x[20]))
+
+# criando vetor de 1 até 20
+c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
+1:20
+## imprima h(x[i]) com i começando em 1 e indo até 20, de um em um.
+
+for ( i in 1:20) { 
+  print(h(x[i]))
+}
 
 
 ### Escopo léxico
@@ -146,6 +171,8 @@ fun2 <- function () {
 # a função anônima usa o valor de y no ambiente onde foi criada, ou seja, dentro de fun2
 
 # o valor de fun1 depende do valor de y no ambiente global
+# removendo y, caso tenha sido criado acidentalmente antes
+rm(y)
 
 fun1(3)
 #> Error in fun1(3) : object 'y' not found
@@ -165,6 +192,13 @@ fun1(3)
 
 fun3(3)
 
+## O que quero mostrar
+
+fun1
+
+fun2
+
+fun3
 y
 fun3
 
@@ -172,15 +206,15 @@ fun3
 ## Apenas leiam o c[odigo e respondam
 ## o que g(2) deve retornar?
 
-a=1
-b=2
+a <- 1
+b <- 2
 f <- function(x) {
   a*x + b
 }
 
 g <- function(x) {
-  a=2
-  b=1
+  a <- 2
+  b <- 1
   f(x)
 }
 
@@ -211,8 +245,8 @@ g(2)
 
 gdebug <- function(x) {
   browser() ## função para debugar o cóodigo
-  a=2
-  b=1
+  a <- 2
+  b <- 1
   f(x)
 }
 
@@ -250,13 +284,15 @@ gdebug1(2)
 
 ## O que o código abaixo retorna?
 
-# y <- 10
-# f1 <- function(x) {
-#   function() {
-#     x + 10
-#   }
-# }
-# f1(1)()
+ y <- 10
+ f1 <- function(x) {
+   function() {
+     x + 10
+   }
+ }
+ f1(1)()
+f2 <- f1(1)
+f2()
 
 ## A Função abaixo retorna um erro quando é chamada? Pq?
 
@@ -264,6 +300,22 @@ f2 <- function(a, b) {
   a * 10
 }
 f2(10, stop("This is an error!"))
+
+f3 <- function(a, b) {
+  b
+  a * 10
+}
+
+f3(a=10, b=stop("This is an error!"))
+
+f4 <- function(a, b) {
+    print(a * 10)
+    b
+  } 
+
+
+f4(a=10, b=stop("This is an error!"))
+
 
 ####
 #### respostas
@@ -295,6 +347,7 @@ if ( require(microbenchmark)==F) {
 mean1 <- function(x) mean(x)
 mean2 <- function(x) sum(x) / length(x)
 
+set.seed(3)
 x <- runif(100)
 microbenchmark(
   mean1(x),
