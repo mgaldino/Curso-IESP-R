@@ -8,11 +8,13 @@
 ## Baseado em: http://norvig.com/spell-correct.html  ##
 #######################################################
 
+install.packages("arm")
+
 ################
 # Naive Bayes ##
 ################
 
-# No problrma de Spelling corrector, queremos sugerir uma palavra dado o que o usuário escreveu.
+# No problema de Spelling corrector, queremos sugerir uma palavra dado o que o usuário escreveu.
 # Modelando esse problema, nós queremos sugerir uma palavra w_i, dado que a pessoa escreveu w_k
 # Como nós nunca temos certeza qual a palavras que o usuário quis dizer 
 # (ex.: se digita post, quis dizer posto ou poste?) a abordagem probabilística é adequada
@@ -35,8 +37,15 @@
 
 
 ## pegando wordlist do opensubtitle
-http://invokeit.wordpress.com/frequency-word-lists/
-  
+#http://invokeit.wordpress.com/frequency-word-lists/
+
+setwd("D:\\2014\\aulas\\IESP\\scripts\\textMining")
+
+opensub <- read.delim2("pt_br.txt", sep=" ", header=F, encoding = "UTF-8") 
+head(opensub)
+names(opensub) <- c("words", "freq")
+#opensub$V1 <- iconv(enc2utf8(opensub$V1), sub = "byte")
+
 
 wget -w 2 -m -H http://www.gutenberg.org/robot/harvest?filetypes[]=txt&langs[]=pt
 link <- url('http://www.gutenberg.org/robot/harvest?filetypes[]=html&langs[]=pt')
@@ -126,12 +135,43 @@ Sys.sleep(2)
 # ela tem um comportamento adequado
 
 
+library(arm)
+
+?adist
+opensub
+
+distancia <- adist(opensub$words[1], opensub$words)
 
 
+### speeding up R code
+# http://lookingatdata.blogspot.se/2011/04/speeding-up-r-computations.html
+# http://www.r-statistics.com/2012/04/speed-up-your-r-code-using-a-just-in-time-jit-compiler/
 
+## Compilando
 
+library(compiler)
+library(microbenchmark)
+## Compiler fornece um compilador para suas funções, ou seja, suas funções vão ser compiladas
+##
 
+myFunction <-function() { for(i in 1:10000) { 1*(1+1) } }
 
+myCompiledFunction <- cmpfun(myFunction) # Compiled function
 
+microbenchmark(
+  myFunction(),
+  myCompiledFunction()
+)
 
+## Pra não precisar compilar cada função em particular
+## podemos usar enableJIT(3) no começo do nosso codigo
+## isso irá compilar todas as funções criadas a partir daquele momento, naquela sessão
+
+require(compiler)
+enableJIT(3)
+
+#Pra desabilitar a compilação, basta rodar enableJIT(0)
+# as funções já compiladas continuarão compiladas
+# mas as novas funções não serão compiladas.
+# não é possivel descompilar, exceto criando de novo a função.
 
