@@ -27,15 +27,17 @@ url <- "http://www.censo2010.ibge.gov.br/sinopse/index.php?dados=8"
 browseURL(url)
 
 ## temos uma mapa e uma tabela
-## vamso extrair a tabela pro R
+## vamos extrair a tabela pro R
 
 ## Carregamos a biblioteca xml
 library(XML)
+## install.packages("XML")
 
 # E usamos htmlParse() para ler o html e transformar num objeto do R,
 # e readHTMLTable() para ler a tabela no html. The length() function indicates 
 #there is a single table in the document, simplifying our work.
 
+url <- "http://www.censo2010.ibge.gov.br/sinopse/index.php?dados=8"
 
 srts <- htmlParse(url)
 class(srts)
@@ -43,29 +45,34 @@ class(srts)
 srts.table <- readHTMLTable(srts, stringsAsFactors = FALSE)
 
 srts.table
+View(srts.table)
+
 
 ## that's it!!
 # Brincadeira. Parcialmente
 class(srts.table)
 str(srts.table)
 length(srts.table)
+
+df1 <- as.data.frame(srts.table)
 df <- as.data.frame(srts.table[[1]])
 
+head(df)
+head(df1)
+all.equal(df, df1) ## checa e o conteúdo é igual
+## nomes das variáveis ficam diferentes
+names(df)
+names(df1)
 ## vamos arrumar nosso banco?
 
 ## melhorando os nomes das variáveis
 names(df)[1] <- "UF"
 names(df)
 
+colnames(df)
 # podemos usar colnames tbm...
 ## o que é melhor, colnames ou names?
-
-
-microbenchmark(
-  colnames(df)[1] <- "UF",
-  names(df)[1] <- "UF"
-)
-
+library(microbenchmark)
 
 ## names é melhor! 1,5x mais rápido.
 ## normalmente eu uso o pacote data.table
@@ -80,14 +87,17 @@ head(df)
 
 df[,1]
 
-## nada, podemso dropar
+## nada, podemos dropar
 
 df <- df[, -1]
+
 ## agora assim, mudando pra uf
 names(df)[1] <- "uf"
 
 head(df)
-## vamos retirar o númeor após os anos, que originalmente era um subescrito?
+
+ 
+## vamos retirar o número após os anos, que originalmente era um subescrito?
 ## alguma ideia de como fazer isso?
 
 # vou fazer uma função
@@ -99,19 +109,15 @@ retiraIndice <- function (df) {
 ## pra não zuar meu banco original, vou faer uma cópia
 df1 <- df
 
-sub('[:alnum:]{4}', '', aux)
-
 aux <- names(df[,-1])
+aux
 substr(aux, 5,5) <- ""
+aux
 
-paste(substr(myvec, 1,4), substr(myvec, 6,nchar(myvec)), sep="")
+aux2 <- paste(substr(aux, 1,4), substr(aux, 6,nchar(aux)), sep="")
 
-teste <- replace(myvec, 5, "")
-
-class(srts.table)
-str(srts.table)
-length(srts.table)
-df <- as.data.frame(srts.table[[1]])
+names(df)[2:13] <- aux2
+names(df)
 
 ## that's it!!
 
@@ -125,9 +131,12 @@ df <- as.data.frame(srts.table[[1]])
 wiki2012 <- 'http://en.wikipedia.org/wiki/United_States_presidential_election,_2012'
 
 auxTable <- htmlParse(wiki2012)
+
 tables2 <- readHTMLTable(auxTable, stringsAsFactors = FALSE)
 
 tables2
+class(tables2)
+length(tables2)
 
 # muitas tabelas
 # como achar qual queremos?
@@ -138,11 +147,17 @@ tables2
 ## que tal algo mais automático?? Vamos buscar por um termo
 ## grep procura um padrão num vetor/lista e retorna o índice do match
 
+grep("abc", c("abcd", "abc", "bcde"))
+
+grep("abc", c("abcd", "abc", "bcde"), value=T)
+
+
 grep('Demographic subgroup', tables2)
 
 table16 <- readHTMLTable(auxTable, which=16, stringsAsFactors = FALSE)
-## ou diretamnte, table16 <- tables2[16]
+## ou diretamente, table16 <- tables2[[16]]
 
+View(table16)
 
 ## funcionou
 ## Vamos fazer uma função
@@ -170,17 +185,12 @@ head(table16)
 # só modificar nossa função pra ficar mais genérica
 
 scrapingWiki1 <- function (url, padraoVec, ...) {
-  
   ## a Função retorna as tabelas da url, que contém o texto especificado em padraoVec
-  
-  
   auxTable <- htmlParse(url)
   tabela <- readHTMLTable(auxTable, stringsAsFactors = FALSE)
-  
   ## criando listas que vão receber os padroes e as tabelas
   aux <- list()
   listaTabelas <- list()
-  
   for ( i in 1:length(padraoVec)) {
     aux[i] <- grep(padraoVec[i], tabela)
     listaTabelas[i] <- tabela[aux[[i]]]
