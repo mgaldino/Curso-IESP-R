@@ -223,16 +223,7 @@ listaLinksMandato1[[8]] <-  unique(linksAno2[grep(2010, linksAno2)])
 ## Mas já estou com preguiça
 ## podemos automatizar?
 
-## Vamos fazer uma função
-
-# Eu vou quebrar meu problema em duas partes
-## 1. Primeiro preciso de uma função que pegue apenas links específicos
-## pra isos uso xpath e depois grep
-
-##2. PReciso usar os links pegos no começo, pra pegar novos links
-## Em suma, preciso fazer um web-crowler
-
-## Vamos fazer a primeira função
+## Vamos fazer uma primeira função
 url <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos"
 
 pegaLinks1 <- function ( url.inicial, padrao.inicial, arg.xpath="//a/@href") {
@@ -243,26 +234,6 @@ pegaLinks1 <- function ( url.inicial, padrao.inicial, arg.xpath="//a/@href") {
   free(doc)
   return(linksMandato)
 }
-
-# 
-# pegaLinks1(linksMandatoVec[3],padrao.inicial )
-# 
-# url.inicial <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato"
-# url <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos"
-# url.inicial <- url
-# pegaLinks1(url, "discursos" )
-# 
-# pegaLinks1(url.inicial, "2003" )
-# 
-# url <- url.inicial 
-# padrao.inicial <- "2003"
-# padrao.inicial <- "discursos"
-# all.equal(linksMandatoVec[3], url)
-# 
-# temp <- pegaLinks1(linksMandatoVec[3], padrao.inicial)
-
-
-
 
 crawler <- function (url.inicial, padrao.inicial, arg.xpath="//a/@href",
                      primeiraExtracao=T) {
@@ -301,11 +272,9 @@ View(primeiraExtracao[grep("view",primeiraExtracao)])
 # os que já tem download
 View(primeiraExtracao[grep("download",primeiraExtracao)])
 
-# criando indice de onde quero fazer segunda extracao
-index <- grep("view",primeiraExtracao)
-
 # # loop para fazer segunda extracao de tudo
-# nao rodar
+# nao rodar em hipótese alguma!!!!
+# vai travar o site
 # for ( i in 1:length(index)
 # segundaExtracao <-  crawler(primeiraExtracao[index[i]], "download", primeiraExtracao=F )
 
@@ -318,11 +287,10 @@ primeiraExtracao[grep("view",primeiraExtracao)[1]] # n é o que queremos
 grep("view",primeiraExtracao)[3]
 primeiraExtracao[grep("view",primeiraExtracao)[3]]
 
-### Extração final
-ultimosLinks <- primeiraExtracao[grep("view",primeiraExtracao)]
-
-resultado <- crawler(primeiraExtracao[51], "download", primeiraExtracao=F)
-resultado
+# Poderia rodar o crawler até ele pegar tudo
+# tornar mais eficiente para não buscar links que já foram procurados
+# então, olharia nesse banco links já procurados e pularia eles
+# mesmo assim, inferno...
 
 ## Vamos adaptar Crawler pra algo mais manual
 ## vai ser mais eficiente
@@ -356,6 +324,7 @@ for ( i in 1:length(linksMandatoVec)) {
   print("semestre")
   print(i)
   Sys.sleep(.5)
+  if ( i > 20) break
 }
   
   padrao.inicial <- "view"
@@ -365,73 +334,43 @@ for ( i in 1:length(linksMandatoVec)) {
   print("view")
   print(i)
   Sys.sleep(.5)
+  if ( i > 20) break
 }
-  padrao.inicial <- "at_download"
+
+# faz uma limpeza
+linksMandatoVec <- linksMandatoVec[grep( "view", linksMandatoVec )]
+
+  padrao.inicial <- "file"
 for ( i in 1:length(linksMandatoVec)) {
   aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
   linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
-  print("at_download")
+  print("file")
   print(i)
   Sys.sleep(.5)
+  if ( i > 20) break
 }
   return(linksMandatoVec)
 }
 
 extracaoFinal <- crawler3(url, "discursos" )
 
-# vamos adapatar pegalinks
-# mais eficiente
-
-pegaLinks2 <- function ( url.inicial, padrao.inicial, arg.xpath="//a/@href") {
-  #browser()
-  doc <- htmlParse( url.inicial)   # parseia url
-  linksAux <- xpathSApply(doc, arg.xpath)   # coleta os links
-  linksMandato <- unique(linksAux[grep(padrao.inicial, linksAux)]) # me traz apenas os links certos
-  linksMandato <- unique(linksMandato[grep("at_download", linksMandato, invert=T)]) # nao quero link com a_download
-  free(doc)
-  return(linksMandato)
-}
-
-
-crawler2 <- function (url.inicial, padrao.inicial, arg.xpath="//a/@href",
-                     primeiraExtracao=T) {
-  #browser()
-  linksMandatoVec <- pegaLinks2(url.inicial, padrao.inicial, arg.xpath) # inicia o crawler
-   i <- 1 # inicia contador do while
-  while ( i  <= length(linksMandatoVec)) {
-    aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
-    linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)]) # acrescenta só o que for novo
-    i <- i + 1 # incrementa contador
-    print(i) # só pra ver evolução
-    print(length(linksMandatoVec)) # evolução do laço
-    Sys.sleep(.5) # pra não afetar o servidor
-    if (i > 50) break ## pra não rodar pra sempre
-  }
-  return(linksMandatoVec)
-}
-
-
-discursos <- crawler2(primeiraExtracao[i],  "download")
-
-
-teste1 <- primeiraExtracao[grep("download",primeiraExtracao)]
+extracaoFinal1 <- extracaoFinal[grep("file", extracaoFinal)]
+extracaoFinal1[1]
 
 ## Agora fazendo o download
 
 folder<-paste("D:\\2014\\aulas\\IESP\\scripts\\textMining\\discursos\\Lula", #remember to change the directory according to where your files are
-        1:length(teste1), teste1 ), ".pdf",sep="")
+        1:length(extracaoFinal1), ".pdf",sep="")
 
-for(x in 1:length(teste1))
+for(x in 1:length(extracaoFinal1))
 {
-  download.file(teste1[x],folder[x],mode="wb")
+  download.file(extracaoFinal1[x],folder[x],mode="wb")
 }
 
-"http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato/2004/2o-semestre/08-07-2004-discurso-do-presidente-da-republica-luiz-inacio-lula-da-silva-reuniao-de-cupula-do-mercosul/download" 
-"http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato/2004/2o-semestre/02-07-2004-discurso-do-presidente-da-republica-luiz-inacio-lula-da-silva-na-cerimonia-de-entrega-das-novas-instalacoes-da-radio-nacional-do-rio-de-janeiro/view"
+#"http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato/2004/2o-semestre/08-07-2004-discurso-do-presidente-da-republica-luiz-inacio-lula-da-silva-reuniao-de-cupula-do-mercosul/download" 
+#"http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato/2004/2o-semestre/02-07-2004-discurso-do-presidente-da-republica-luiz-inacio-lula-da-silva-na-cerimonia-de-entrega-das-novas-instalacoes-da-radio-nacional-do-rio-de-janeiro/view"
 
 
-View(teste)
- 
 
 
   
@@ -440,117 +379,7 @@ View(teste)
 ## Além disso, posso ter mais de um padrão pra fazer match
 
 
-
-
-## Pra evitar sobrecarregar os servidores, vamos usar
-# Sys.sleep
-
-
-
-
-http://www2.planalto.gov.br/acompanhe-o-planalto/discursos#b_start=0
-
-
-BuscaInfoPronunciamentos <- function(vetorNomes, vetorUF, dataInicio, dataFinal, k){  
-  # Fun??o que busca informa??es dos pronunciamentos dos parlamentares 
-  # utilizando um vetor de nomes, um vetor de ufs, as datas de inicio e 
-  # final do periodo desejado e o numero de pronunciamentos obtidos por vez (maximo de 1000).
-  # retorna uma lista com tres elementos: contabiliza o numero de pronunciamentos,
-  # contabiliza o numero de parlamentares e, por fim, retorna os dados dos pronunciamentos
-  if(require(seqinr) == F) install.packages("seqinr")
-  dados <- list()
-  vetorNomes <- trimSpace(vetorNomes)  # removendo espa?os do inicio e do final
-  vetorNomes <- gsub(" ", '%20', vetorNomes)  
-  dataInicio <- gsub("/", "%2F", dataInicio)
-  dataFinal <- gsub("/", "%2F", dataFinal)
-  nParlamentares <- 0
-  totalPronunciamentos <- 0
-  for  (i in 1:length(vetorNomes)){
-    currentPage <- 1  # define pagina inicial da busca
-    # Link que ser? procurado
-    link <- url(paste("http://www.camara.gov.br/internet/sitaqweb/resultadoPesquisaDiscursos.asp?txIndexacao=&CurrentPage=",
-                      currentPage,
-                      "&BasePesq=plenario&txOrador=", 
-                      vetorNomes[i],
-                      "&txPartido=",
-                      "&dtInicio=",
-                      dataInicio,
-                      "&dtFim=",
-                      dataFinal, 
-                      "&txUF=",
-                      vetorUF[i], 
-                      #listaFaseSessao=1 - pequeno expediente
-                      # Legislatura=52
-                      "&txSessao=&listaTipoSessao=&listaTipoInterv=&inFalaPres=&listaTipoFala=&listaFaseSessao=&txAparteante=&listaEtapa=&CampoOrdenacao=dtSessao", 
-                      "&TipoOrdenacao=DESC&PageSize=", 
-                      k,
-                      "&txTexto=&txSumario=", 
-                      sep=''))  
-    # lendo c?digo da p?gina
-    #    setInternet2(use = TRUE)
-    dados[[i]] <- readLines(link, encoding = "UTF-8")  
-    close(link)  # fechando conex?o
-    # verificando de h? ou n?o um discurso na p?gina
-    semPronunciamento <- grepl('Nenhum discurso encontrado.', dados[[i]])
-    # caso n?o haja discurso, seguir para o pr?ximo parlamentar
-    if(sum(semPronunciamento) > 0){
-      dados[[i]] <- NA
-      next  # proximo i
-    } 
-    # conta o numero de parlamentares com discurso
-    nParlamentares <- nParlamentares + 1 
-    
-    # regex para obter total de discursos do parlamentar                    
-    padraoNum <- '<span class=\"visualStrong\">[[:digit:]]+\\.*[[:digit:]]*</span>'  
-    listaNum <- grep(padraoNum, dados[[i]], value=T)  # refinando dados  
-    
-    num <- 0 # vari?vel que receber? o total de discursos do parlamentar
-    num <- substr(listaNum, regexpr("([[:alpha:]]+|[[:blank:]]+|[[:punct:]]+)>", listaNum)+2, regexpr("</span>", listaNum)-1)  # nomes dos deputados
-    num <- gsub("\\.", '', num)
-    num <- as.numeric(num)
-    totalPronunciamentos <- totalPronunciamentos + num  # somando o total de discursos obtidos
-    # caso exista mais de uma p?gina por nome de deputado: num > 1000
-    pageSize <- k  # numero max de registros ja obtidos
-    
-    while (num > 0 & num  > pageSize){
-      print(paste("Esse deputado", i, "tem mais de", k, "discursos. Total de", num, sep=' '))
-      currentPage <- currentPage + 1  # incrementando pag
-      # atualizando link com nova current page                  
-      link <- url(paste("http://www.camara.gov.br/internet/sitaqweb/resultadoPesquisaDiscursos.asp?txIndexacao=&CurrentPage=",
-                        currentPage,
-                        "&BasePesq=plenario&txOrador=", 
-                        vetorNomes[i],
-                        "&txPartido=",
-                        "&dtInicio=",
-                        dataInicio,
-                        "&dtFim=",
-                        dataFinal, 
-                        "&txUF=",
-                        vetorUF[i], 
-                        #listaFaseSessao=1 - pequeno expediente
-                        # Legislatura=52
-                        "&txSessao=&listaTipoSessao=&listaTipoInterv=&inFalaPres=&listaTipoFala=&listaFaseSessao=&txAparteante=&listaEtapa=&CampoOrdenacao=dtSessao",
-                        "&TipoOrdenacao=DESC&PageSize=",
-                        k,
-                        "&txTexto=&txSumario=", 
-                        sep=''))  
-      # concatenando vetor com os novos dados do parlamentar i
-      #     setInternet2(use = TRUE)
-      dados[[i]] <- c(dados[[i]], readLines(link, encoding = "UTF-8"))  # adicionando novos dados
-      close(link) # fechando conex?o
-      pageSize <- pageSize + k  # incrementando numero max de registros obtidos
-    }
-    
-    print(paste("Voc? j? pesquisou", i , "deputado(s) de", length(vetorNomes), sep=' '))
-    #Sys.sleep(5)  # faz o R esperar n segundos para continuar
-    gc()
-  }
-  listaDados <- list("dados" = dados, "nDiscursos" = totalPronunciamentos, "nParlamentares" = nParlamentares)
-  return(listaDados)
-}
-
-
-
+## Como preencher formulários no R
 http://stackoverflow.com/questions/16601520/what-if-i-want-to-web-scrape-with-r-for-a-page-with-parameters/16860430#16860430
 
 
