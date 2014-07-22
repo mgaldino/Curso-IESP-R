@@ -47,7 +47,6 @@ library(XML)
 # http://www.r-bloggers.com/friday-function-setinternet2/
 # http://stackoverflow.com/questions/12647207/reading-url-in-r-and-rstudio?rq=1
 setInternet2(TRUE)
-
 options(timeout=500)
 
 ### Coletando os discursos (em PDF) do Lula
@@ -134,7 +133,7 @@ browseURL(url)
 ## Sintaxe de XPath
 # Expression    Description
 # nodename 	    Seleciona todos os nós com nome "nodename"
-# / 	          Seleciona do nós raix
+# / 	          Seleciona o nós raiz
 # // 	          Seleciona nós do documento que tenha match, não importa onde esteja o nó
 # . 	          Seleciona o nó atual
 # @ 	          Seleciona atributos
@@ -175,11 +174,12 @@ doc <- htmlParse(url)
 links1 <- xpathSApply(doc, "//a/@href")
 ## doc tem que ter sido parseado. p ex. por htmlParse
 length(links1)
+View(links1)
 # vieram vários linkls
 # quero apenas com mandato
 # podemos usar grep
 linksMandato <- links1[grep("mandato", links1)]
-
+View(linksMandato)
 ## tivemos algumas repetições
 ## vamos eliminar duplicados
 linksMandato <- unique(linksMandato)
@@ -207,17 +207,17 @@ linksAno[[1]] <- xpathSApply(linksVec[[1]], "//a/@href")
 linksVec[[2]] <- htmlParse(linksMandatoVec[2])
 linksAno[[2]] <- xpathSApply(linksVec[[2]], "//a/@href")
 
-listaLinksMandato1 <- vector("list",8) ## cria uma lista, pr'e-alocando tamanho 4
+listaLinksMandato1 <- vector("list",8) ## cria uma lista, pré-alocando tamanho 8
 class(listaLinksMandato1)
   
-listaLinksMandato1[[1]] <-  unique(linksAno[[1]][grep(2003, linksAno1)])
-listaLinksMandato1[[2]] <-  unique(linksAno1[grep(2004, linksAno1)])
-listaLinksMandato1[[3]] <-  unique(linksAno1[grep(2005, linksAno1)])
-listaLinksMandato1[[4]] <-  unique(linksAno1[grep(2006, linksAno1)])
-listaLinksMandato1[[5]] <-  unique(linksAno2[grep(2007, linksAno2)])
-listaLinksMandato1[[6]] <-  unique(linksAno2[grep(2008, linksAno2)])
-listaLinksMandato1[[7]] <-  unique(linksAno2[grep(2009, linksAno2)])
-listaLinksMandato1[[8]] <-  unique(linksAno2[grep(2010, linksAno2)])
+listaLinksMandato1[[1]] <-  unique(linksAno[[1]][grep(2003, linksAno[[1]])])
+listaLinksMandato1[[2]] <-  unique(linksAno[[1]][grep(2004, linksAno[[1]])])
+listaLinksMandato1[[3]] <-  unique(linksAno[[1]][grep(2005, linksAno[[1]])])
+listaLinksMandato1[[4]] <-  unique(linksAno[[1]][grep(2006, linksAno[[1]])])
+listaLinksMandato1[[5]] <-  unique(linksAno[[2]][grep(2007, linksAno[[2]])])
+listaLinksMandato1[[6]] <-  unique(linksAno[[2]][grep(2008, linksAno[[2]])])
+listaLinksMandato1[[7]] <-  unique(linksAno[[2]][grep(2009, linksAno[[2]])])
+listaLinksMandato1[[8]] <-  unique(linksAno[[2]][grep(2010, linksAno[[2]])])
 
 ## E assim por diante
 ## Mas já estou com preguiça
