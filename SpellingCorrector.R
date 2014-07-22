@@ -40,79 +40,7 @@ install.packages("arm")
 #http://invokeit.wordpress.com/frequency-word-lists/
 
 setwd("D:\\2014\\aulas\\IESP\\scripts\\textMining")
-
-opensub <- read.delim2("pt_br.txt", sep=" ", header=F, encoding = "UTF-8") 
-head(opensub)
-names(opensub) <- c("words", "freq")
-#opensub$V1 <- iconv(enc2utf8(opensub$V1), sub = "byte")
-
-
-wget -w 2 -m -H http://www.gutenberg.org/robot/harvest?filetypes[]=txt&langs[]=pt
-link <- url('http://www.gutenberg.org/robot/harvest?filetypes[]=html&langs[]=pt')
-
-## esperar 2 segundos
-
-
-url <- "http://www.gutenberg.org/robot/harvest?filetypes[]=html&langs[]=pt"
-doc <- htmlParse(url)
-links <- xpathSApply(doc, "//a/@href")
-free(doc)
-
-aux <- grep("offset", links)
-links[aux]
-# new url etc.
-
-## generalizando pra uma função
-## vamos usar append
-?append
-
-getMyLinks <- function ( primeiraPagina, StepOut = 3 ) {
-  url <- character()
-  url[1] <- primeiraPagina
-  condition <- T
-  i <- 1
-  links <- list()
-  while ( condition ) {
-    doc <- htmlParse(url[length(url)])
-    links[i] <- xpathSApply(doc, "//a/@href")
-    free(doc) 
-    aux <- grep("offset", links[i])
-    url <- append (url, aux)
-    i <- i + 1
-    if (!grepl("offset", links) ) {
-      condition <- F
-    }
-    if (i > StepOut) {
-      condition <- F
-    }
-    Sys.sleep(2)
-  }
-  return(links)
-}
-
-url <- "http://www.gutenberg.org/robot/harvest?filetypes[]=html&langs[]=pt"
-linksTeste <- getMyLinks(url )
-
-  
-  
-
-
-
-class(links)
-length(links)
-links[1]
-gsub("href", "", links[1])
-nchar("http://www.gutenberg.lib.md.us/1/3/0/9/13092/13092-h.zip")
-nchar(links[1])
-
-vec1 <- "a"
-microbenchmark(
-  vec1 <- append(vec1, "b"),
-  vec1[2] <- "b"
-) 
-
-
-Sys.sleep(2)
+load(opensubtitles.RData)
 
 # Falta ainda calcularmos Prob(w_k|w_i) e Prob(w_k)
 # Com relação à Prob(w_k), iremos usar um truque para evitar a necessidade de computá-lo
@@ -138,10 +66,121 @@ Sys.sleep(2)
 library(arm)
 
 ?adist
-opensub
 
-distancia <- adist(opensub$words[1], opensub$words)
+distancia <- adist( opensub$words,opensub$words[1])
+head(distancia)
 
+## Agora vou fazer minha verossimilhança
+# vamos usar invlogit
+invlogit
+
+# é a função da logística!
+
+likelihood <- invlogit(distancia)
+summary(likelihood)
+
+## tá muito concentrado perto do 1
+## quero suavizar mais
+## vou centrar meus dados
+likelihood <- invlogit(distancia - mean(distancia))
+summary(likelihood)
+
+df <- data.frame(likelihood=likelihood, opensub)
+head(df)
+df$distancia <- distancia
+df$words <- as.character(df$words)
+
+# vamos ver o gráfico das minha verossimilhança?
+## como tenho muitos data.points vou usar uma amostra
+## comando sample
+library(ggplot2)
+set.seed(2)
+df1 <- df[sample(1:nrow(df), 2000),]
+
+p <- ggplot(df1, aes(y=likelihood, x = factor(1)))
+p + geom_boxplot()
+
+
+p <- ggplot(df1, aes(x=distancia, y=likelihood))
+(p <- p + geom_line())
+p + geom_point()
+
+
+## fiz errado: qto menor distância, maior deveria ser likelihood
+
+likelihood <- invlogit( mean(distancia) - distancia)
+df$likelihood <- likelihood
+summary(likelihood)
+
+## os dados tão demorando pra cair, e depois cai rápido demais
+## preciso ajustar
+unique(likelihood)
+#imprimiu em notação científica
+
+options(scipen=20, digits=4) # imprime melhor
+
+unique(likelihood)
+
+## quero que de 0.9993670098510825106 para 0.9874378161925373432 caia mais rápido
+## alguma sugestão?
+
+distNormalizada <- (mean(distancia) - distancia)/sd(distancia) # padronizar
+
+# e fazer transformação não-linear
+
+distNormalizada1 <- (distNormalizada*40 -113)
+sort(unique(distNormalizada1))
+df$likelihood1 <- invlogit( distNormalizada1)
+sort(unique(df$likelihood1))
+
+## melhorou bastante
+
+## Pronto, temos nossa verossimilhança
+# Agora, só aplicar teorema de Bayes
+df$priori <- df$freq/sum(df$freq)
+
+sugestao <- function(palavra) {
+  #browser()
+  distancia <- adist( opensub$words,palavra)
+  distNormalizada <- (mean(distancia) - distancia)/sd(distancia)
+  distNormalizada1 <- (distNormalizada*40 -117)
+  likelihood <- invlogit( distNormalizada1)
+  posicao <- which.max(df$priori*likelihood)
+  df$words[posicao]
+}
+
+sugestao("porta")
+sugestao("port")
+sugestao("nao")
+sugestao("paralizado")
+sugestao("paralisado")
+
+## Priori ruim, tenho que dar mais peso pra likelihood
+## se dist for zero, likelihood = 1
+## se dist for 1, likelihood = .05
+## se dist for 2, likelihood = .00001
+## se dist for 3 ou maior, likelihood = 0
+
+## vai demorar muito tempo pra calcular a distancia para cada palavra
+sugestao1 <- function(palavra) {
+  #browser()
+  distancia <- adist( opensub$words,palavra)
+  likelihood  <- ifelse( distancia < 1, 1,
+                         ifelse(distancia < 2, .05, 
+                                ifelse(distancia < 3, .0001, 0)))
+  posicao <- which.max(df$priori*likelihood)
+  df$words[posicao]
+}
+
+sugestao1("porta")
+sugestao1("port")
+sugestao1("nao")
+sugestao1("paralizado")
+sugestao1("paralisado")
+
+## melhorou um pouco
+
+## idealmente, deveria ter um training set e ajustar o melhor modelo
 
 ### speeding up R code
 # http://lookingatdata.blogspot.se/2011/04/speeding-up-r-computations.html
