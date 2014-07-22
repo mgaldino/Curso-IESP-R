@@ -256,11 +256,11 @@ pegaLinks2 <- function ( url, padrao) {
       doc[[i]] <- htmlParse(url[1])
       linksAux[[i]] <- xpathSApply(doc[[i]], "//a/@href")   # coleta os links
       
-      if (length(padrao[[i]]) < 2 ) {
-        linksMandato[[i]] <- unique(linksAux[grep(padrao, linksAux)]) # me traz apenas os links certos
+      if (length(padrao) < 2 ) {
+        linksMandato[[i]] <- unique(linksAux[[i]][grep(padrao, linksAux[[i]])]) # me traz apenas os links certos
       } else {
         for ( j in 1:length(padrao)) {
-          linksMandato[[i]] <- unique(linksAux[grep(padrao[j], linksAux)]) # me traz apenas os links certos
+          linksMandato[[i]] <- unique(linksAux[[i]][grep(padrao[j], linksAux[[i]])]) # me traz apenas os links certos
         }
       }
     }
@@ -269,11 +269,11 @@ pegaLinks2 <- function ( url, padrao) {
       doc[[i]] <- htmlParse(url[i])
       linksAux[[i]] <- xpathSApply(doc[[i]], "//a/@href")   # coleta os links
       if (length(padrao) < 2 ) {
-        linksMandato[[i]] <- unique(linksAux[grep(padrao, linksAux)]) # me traz apenas os links certos
+        linksMandato[[i]] <- unique(linksAux[[i]][grep(padrao, linksAux[[i]])]) # me traz apenas os links certos
         
       } else {
         for ( j in 1:length(padrao)) {
-          linksMandato[[i]] <- unique(linksAux[grep(padrao[j], linksAux)]) # me traz apenas os links certos
+          linksMandato[[i]] <- unique(linksAux[[i]][grep(padrao[j], linksAux[[i]])]) # me traz apenas os links certos
         }
       }   
       
@@ -293,33 +293,18 @@ mycrawler <- function (urlInicial, listaPadrao ) {
   
   for ( i in 1:length(listaPadrao)) {
     listaLinks <- append(listaLinks, pegaLinks2(listaLinks, listaPadrao[[i]]))  
+    Sys.sleep(2) # faz o sistema esperar 2 segundos antes de começar de novo
+    print(paste(i, "de", length(listaPadrao), "iterações"))
   }
   return(listaLinks)
 }
 
 urlDiscLula  <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos"
 listaTermos <- list("mandato", as.character(2003:2010), "semestre", "pdf")
+
 links <- mycrawler(urlDiscLula, listaTermos )
 
-pegaLinks2
 
-#And now we will concatenate our links for the first term to a single vector
-term01<-c(term01a,term01b,term01c) 
-term01[4]<-"http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato/2005/1o-semestre-1"
-
-#We will do the same thing for the second term.
-#We will divide our code to get the speeches from 
-#2007-2010 (first semester) and 2007-2010 (second semester)
-term02a<-paste("http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/2o-mandato/",c(2007:2010),
-               "/1o-semestre",sep="")
-term02b<-paste("http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/2o-mandato/",c(2007:2010),
-               "/2o-semestre",sep="")
-
-#Now we will concatenate our links for the second term to a single vector
-term02<-c(term02a,term02b) ##links of lula's speeches term2
-
-#At last, we will concatenate all our links (for the two terms) to a single vector
-speeches<-c(term01,term02)
 
 
 
