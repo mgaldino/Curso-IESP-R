@@ -212,7 +212,7 @@ tabelasTeste <- scrapingWiki1(wiki2012, c("Demographic subgroup", "Margin") )
 
 ## na origem, daria pra corrigir o nome das colunas, usando o argumento header=T em readHTMLTable
 
-
+library(XML)
 scrapingWiki2 <- function (url, padraoVec, header=T, ...) {
   
   ## a Função retorna as tabelas da url, que contém o texto especificado em padraoVec
@@ -233,10 +233,34 @@ scrapingWiki2 <- function (url, padraoVec, header=T, ...) {
 }
 
 
+wiki2012 <- 'http://en.wikipedia.org/wiki/United_States_presidential_election,_2012'
 
 tabelasTeste2 <- scrapingWiki2(wiki2012, c("Demographic subgroup", "Margin") )
 
+length(tabelasTeste2)
+View(tabelasTeste2[[1]])
+View(tabelasTeste2[[2]])
 
+## processando resultado
+class(tabelasTeste2[[1]])
+mydf1 <- tabelasTeste2[[1]]
+names(tabelasTeste2[[1]]) <- mydf1[1,]
+
+View(tabelasTeste2[[1]])
+tabelasTeste2[[1]] <- tabelasTeste2[[1]][-1,]
+
+View(tabelasTeste2[[1]])
+tabelasTeste2[[1]][, 2:5] <- as.numeric(tabelasTeste2[[1]][, 2:5])
+
+tabelasTeste2[[1]][,2] <- as.numeric(tabelasTeste2[[1]][,2])
+tabelasTeste2[[1]][,3] <- as.numeric(tabelasTeste2[[1]][,3])
+tabelasTeste2[[1]][,4] <- as.numeric(tabelasTeste2[[1]][,4])
+tabelasTeste2[[1]][,5] <- as.numeric(tabelasTeste2[[1]][,5])
+
+summary(tabelasTeste2[[1]])
+
+## Dívidas
+## 2. Entender porque numeric pra 2:5 não funcionou
 ## corrigiu parcialmente apenas. Ok.
 
 
