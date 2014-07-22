@@ -168,6 +168,8 @@ browseURL(url)
 ## Tutorial simples
 ## http://www.w3schools.com/xpath/
 
+url <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos"
+
 doc <- htmlParse(url)
 
 links1 <- xpathSApply(doc, "//a/@href")
@@ -194,17 +196,28 @@ linksMandato2
 free(doc) # libera da memória o objeto
 
 # Com isso conseguimos apenas o primeiro link. Dentro desse link há mais links.
-mandato1 <- htmlParse(linksMandato[1])
-linksAno1 <- xpathSApply(mandato1, "//a/@href")
 
-mandato2 <- htmlParse(linksMandato[2])
-linksAno2 <- xpathSApply(mandato2, "//a/@href")
+linksMandatoVec <- linksMandato
+linksVec <- list()
+linksAno <- list()
 
-listaLinksMandato1 <- vector("list",4) ## cria uma lista, pr'e-alocando tamanho 4
+linksVec[[1]] <- htmlParse(linksMandatoVec[1])
+linksAno[[1]] <- xpathSApply(linksVec[[1]], "//a/@href")
+
+linksVec[[2]] <- htmlParse(linksMandatoVec[2])
+linksAno[[2]] <- xpathSApply(linksVec[[2]], "//a/@href")
+
+listaLinksMandato1 <- vector("list",8) ## cria uma lista, pr'e-alocando tamanho 4
 class(listaLinksMandato1)
   
-listaLinksMandato1[[1]] <-  unique(linksAno1[grep(2003, linksAno1)])
+listaLinksMandato1[[1]] <-  unique(linksAno[[1]][grep(2003, linksAno1)])
 listaLinksMandato1[[2]] <-  unique(linksAno1[grep(2004, linksAno1)])
+listaLinksMandato1[[3]] <-  unique(linksAno1[grep(2005, linksAno1)])
+listaLinksMandato1[[4]] <-  unique(linksAno1[grep(2006, linksAno1)])
+listaLinksMandato1[[5]] <-  unique(linksAno2[grep(2007, linksAno2)])
+listaLinksMandato1[[6]] <-  unique(linksAno2[grep(2008, linksAno2)])
+listaLinksMandato1[[7]] <-  unique(linksAno2[grep(2009, linksAno2)])
+listaLinksMandato1[[8]] <-  unique(linksAno2[grep(2010, linksAno2)])
 
 ## E assim por diante
 ## Mas já estou com preguiça
@@ -220,90 +233,211 @@ listaLinksMandato1[[2]] <-  unique(linksAno1[grep(2004, linksAno1)])
 ## Em suma, preciso fazer um web-crowler
 
 ## Vamos fazer a primeira função
+url <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos"
 
-pegaLinks1 <- function ( url, padrao) {
-  ## carrega a biblioteca
-  if( require(XML)==F) {
-  install.packages("XML")
-  library(XML)}
-  
-  doc <- htmlParse(url)   # parseia url
-  linksAux <- xpathSApply(doc, "//a/@href")   # coleta os links
-  linksMandato <- unqiue(linksAux[grep(padrao, linksAux)]) # me traz apenas os links certos
-}
-    
-## Essa função funciona pro primeiro passo, quando tenho um link
-## MAs no segundo passo, não vai funcionar, pois posso ter mais de um link
-## Além disso, posso ter mais de um padrão pra fazer match
-
-## Vamos modificá-la
-## 
-
-
-pegaLinks2 <- function ( url, padrao) {
-  browser()
-  ## carrega a biblioteca
-  if( require(XML)==F) {
-    install.packages("XML")
-    library(XML)}
-  
-  doc <- vector("list", length(url)) ## estou pré-alocando lista
-  linksAux <- vector("list", length(url))
-  linksMandato <- vector("list", length(url))
-  
-  if (length(url) < 2 ) {
-    for ( i in 1:length(url)) {
-      doc[[i]] <- htmlParse(url[1])
-      linksAux[[i]] <- xpathSApply(doc[[i]], "//a/@href")   # coleta os links
-      
-      if (length(padrao) < 2 ) {
-        linksMandato[[i]] <- unique(linksAux[[i]][grep(padrao, linksAux[[i]])]) # me traz apenas os links certos
-      } else {
-        for ( j in 1:length(padrao)) {
-          linksMandato[[i]] <- unique(linksAux[[i]][grep(padrao[j], linksAux[[i]])]) # me traz apenas os links certos
-        }
-      }
-    }
-  } else {
-    for ( i in 1:length(url)) {
-      doc[[i]] <- htmlParse(url[i])
-      linksAux[[i]] <- xpathSApply(doc[[i]], "//a/@href")   # coleta os links
-      if (length(padrao) < 2 ) {
-        linksMandato[[i]] <- unique(linksAux[[i]][grep(padrao, linksAux[[i]])]) # me traz apenas os links certos
-        
-      } else {
-        for ( j in 1:length(padrao)) {
-          linksMandato[[i]] <- unique(linksAux[[i]][grep(padrao[j], linksAux[[i]])]) # me traz apenas os links certos
-        }
-      }   
-      
-    }     
-    
-    }
-  
+pegaLinks1 <- function ( url.inicial, padrao.inicial, arg.xpath="//a/@href") {
+  #browser()
+  doc <- htmlParse( url.inicial)   # parseia url
+  linksAux <- xpathSApply(doc, arg.xpath)   # coleta os links
+  linksMandato <- unique(linksAux[grep(padrao.inicial, linksAux)]) # me traz apenas os links certos
+  free(doc)
   return(linksMandato)
 }
 
-## E Agora, nosso crowler
-mycrawler <- function (urlInicial, listaPadrao ) {
-  browser()
-  listaLinks <- list()
-  
-  listaLinks[[1]] <- urlInicial
-  
-  for ( i in 1:length(listaPadrao)) {
-    listaLinks <- append(listaLinks, pegaLinks2(listaLinks, listaPadrao[[i]]))  
-    Sys.sleep(2) # faz o sistema esperar 2 segundos antes de começar de novo
-    print(paste(i, "de", length(listaPadrao), "iterações"))
+# 
+# pegaLinks1(linksMandatoVec[3],padrao.inicial )
+# 
+# url.inicial <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato"
+# url <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos"
+# url.inicial <- url
+# pegaLinks1(url, "discursos" )
+# 
+# pegaLinks1(url.inicial, "2003" )
+# 
+# url <- url.inicial 
+# padrao.inicial <- "2003"
+# padrao.inicial <- "discursos"
+# all.equal(linksMandatoVec[3], url)
+# 
+# temp <- pegaLinks1(linksMandatoVec[3], padrao.inicial)
+
+
+
+
+crawler <- function (url.inicial, padrao.inicial, arg.xpath="//a/@href",
+                     primeiraExtracao=T) {
+  #browser()
+  linksMandatoVec <- pegaLinks1(url.inicial, padrao.inicial, arg.xpath) # inicia o crawler
+  if( primeiraExtracao) linksMandatoVec <- linksMandatoVec[3:4] ## joga fora o q não presta da primeira ver
+  padrao.inicial <- "mandato" ## altera para buscar apenas com palavra mandato
+  ## restringindo o escopo de busca
+  i <- 1 # inicia contador do while
+  while ( i  <= length(linksMandatoVec)) {
+    aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
+    linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)]) # acrescenta só o que for novo
+    i <- i + 1 # incrementa contador
+    print(i) # só pra ver evolução
+    print(length(linksMandatoVec)) # evolução do laço
+    Sys.sleep(.5) # pra não afetar o servidor
+    if (i > 50) break ## pra não rodar pra sempre
   }
-  return(listaLinks)
+  return(linksMandatoVec)
 }
 
-urlDiscLula  <- "http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos"
-listaTermos <- list("mandato", as.character(2003:2010), "semestre", "pdf")
+primeiraExtracao <-  crawler(url, "discursos" )
 
-links <- mycrawler(urlDiscLula, listaTermos )
 
+
+# visualizando resultados
+View(primeiraExtracao)
+
+# apenas que tem pdf
+View(primeiraExtracao[grep("pdf",primeiraExtracao)])
+
+#apenas que tem view
+# view é o link antes de download
+View(primeiraExtracao[grep("view",primeiraExtracao)])
+
+# os que já tem download
+View(primeiraExtracao[grep("download",primeiraExtracao)])
+
+# criando indice de onde quero fazer segunda extracao
+index <- grep("view",primeiraExtracao)
+
+# # loop para fazer segunda extracao de tudo
+# nao rodar
+# for ( i in 1:length(index)
+# segundaExtracao <-  crawler(primeiraExtracao[index[i]], "download", primeiraExtracao=F )
+
+
+# alternativa
+grep("view",primeiraExtracao)[1]
+primeiraExtracao[grep("view",primeiraExtracao)[1]] # n é o que queremos
+# queremos dos mandatos, nao posse
+
+grep("view",primeiraExtracao)[3]
+primeiraExtracao[grep("view",primeiraExtracao)[3]]
+
+### Extração final
+ultimosLinks <- primeiraExtracao[grep("view",primeiraExtracao)]
+
+resultado <- crawler(primeiraExtracao[51], "download", primeiraExtracao=F)
+resultado
+
+## Vamos adaptar Crawler pra algo mais manual
+## vai ser mais eficiente
+
+
+crawler3 <- function (url.inicial, padrao.inicial, arg.xpath="//a/@href",
+                     primeiraExtracao=T) {
+  browser()
+  linksMandatoVec <- pegaLinks1(url.inicial, padrao.inicial, arg.xpath) # inicia o crawler
+  if( primeiraExtracao) linksMandatoVec <- linksMandatoVec[3:4] ## joga fora o q não presta da primeira ver
+  padrao.inicial <- "mandato" ## altera para buscar apenas com palavra mandato
+  aux <- pegaLinks1(linksMandatoVec[1], padrao.inicial) # guarda resultado em auxiliar
+  linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
+  aux <- pegaLinks1(linksMandatoVec[2], padrao.inicial) # guarda resultado em auxiliar
+  linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
+  vec <- as.character(2003:2010)
+  for ( i in 1:length(vec)) {
+    padrao.inicial <- vec[i]
+    aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
+    linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
+    Sys.sleep(.5)
+  }
+
+# faz uma limpeza
+linksMandatoVec <- linksMandatoVec[grep( "[20[:alnum:]+]", linksMandatoVec )]
+
+padrao.inicial <- "semestre"
+for ( i in 1:length(linksMandatoVec)) {
+  aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
+  linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
+  print("semestre")
+  print(i)
+  Sys.sleep(.5)
+}
+  
+  padrao.inicial <- "view"
+for ( i in 1:length(linksMandatoVec)) {
+  aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
+  linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
+  print("view")
+  print(i)
+  Sys.sleep(.5)
+}
+  padrao.inicial <- "at_download"
+for ( i in 1:length(linksMandatoVec)) {
+  aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
+  linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
+  print("at_download")
+  print(i)
+  Sys.sleep(.5)
+}
+  return(linksMandatoVec)
+}
+
+extracaoFinal <- crawler3(url, "discursos" )
+
+# vamos adapatar pegalinks
+# mais eficiente
+
+pegaLinks2 <- function ( url.inicial, padrao.inicial, arg.xpath="//a/@href") {
+  #browser()
+  doc <- htmlParse( url.inicial)   # parseia url
+  linksAux <- xpathSApply(doc, arg.xpath)   # coleta os links
+  linksMandato <- unique(linksAux[grep(padrao.inicial, linksAux)]) # me traz apenas os links certos
+  linksMandato <- unique(linksMandato[grep("at_download", linksMandato, invert=T)]) # nao quero link com a_download
+  free(doc)
+  return(linksMandato)
+}
+
+
+crawler2 <- function (url.inicial, padrao.inicial, arg.xpath="//a/@href",
+                     primeiraExtracao=T) {
+  #browser()
+  linksMandatoVec <- pegaLinks2(url.inicial, padrao.inicial, arg.xpath) # inicia o crawler
+   i <- 1 # inicia contador do while
+  while ( i  <= length(linksMandatoVec)) {
+    aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
+    linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)]) # acrescenta só o que for novo
+    i <- i + 1 # incrementa contador
+    print(i) # só pra ver evolução
+    print(length(linksMandatoVec)) # evolução do laço
+    Sys.sleep(.5) # pra não afetar o servidor
+    if (i > 50) break ## pra não rodar pra sempre
+  }
+  return(linksMandatoVec)
+}
+
+
+discursos <- crawler2(primeiraExtracao[i],  "download")
+
+
+teste1 <- primeiraExtracao[grep("download",primeiraExtracao)]
+
+## Agora fazendo o download
+
+folder<-paste("D:\\2014\\aulas\\IESP\\scripts\\textMining\\discursos\\Lula", #remember to change the directory according to where your files are
+        1:length(teste1), teste1 ), ".pdf",sep="")
+
+for(x in 1:length(teste1))
+{
+  download.file(teste1[x],folder[x],mode="wb")
+}
+
+"http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato/2004/2o-semestre/08-07-2004-discurso-do-presidente-da-republica-luiz-inacio-lula-da-silva-reuniao-de-cupula-do-mercosul/download" 
+"http://www.biblioteca.presidencia.gov.br/ex-presidentes/luiz-inacio-lula-da-silva/discursos/1o-mandato/2004/2o-semestre/02-07-2004-discurso-do-presidente-da-republica-luiz-inacio-lula-da-silva-na-cerimonia-de-entrega-das-novas-instalacoes-da-radio-nacional-do-rio-de-janeiro/view"
+
+
+View(teste)
+ 
+
+
+  
+## Essa função funciona pro primeiro passo, quando tenho um link
+## MAs no segundo passo, não vai funcionar, pois posso ter mais de um link
+## Além disso, posso ter mais de um padrão pra fazer match
 
 
 
@@ -313,7 +447,6 @@ links <- mycrawler(urlDiscLula, listaTermos )
 
 
 
-?Sys.sleep
 
 http://www2.planalto.gov.br/acompanhe-o-planalto/discursos#b_start=0
 
