@@ -15,7 +15,7 @@ estatística nenhuma.
 - mas reflete o espírito da LDA
 
 
-Exemplo
+Exemplo (adapatado de E. Chen)
 ========================================================
 
 - Gosto de Cerveja e Batata Frita
