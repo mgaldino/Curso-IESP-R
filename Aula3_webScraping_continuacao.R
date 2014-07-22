@@ -235,6 +235,21 @@ pegaLinks1 <- function ( url.inicial, padrao.inicial, arg.xpath="//a/@href") {
   return(linksMandato)
 }
 
+
+listaLinksMandato1 <- vector("list",8) ## cria uma lista, pré-alocando tamanho 8
+listaLinksMandato1[[1]] <- pegaLinks1(linksMandatoVec[1], "2003")
+
+linksMandatoVec <- linksMandato
+linksVec <- list()
+linksAno <- list()
+listaLinksMandato1 <- vector("list",8) ## cria uma lista, pré-alocando tamanho 8
+
+linksVec[[1]] <- htmlParse(linksMandatoVec[1])
+linksAno[[1]] <- xpathSApply(linksVec[[1]], "//a/@href")
+
+listaLinksMandato1[[1]] <-  unique(linksAno[[1]][grep(2003, linksAno[[1]])])
+
+
 crawler <- function (url.inicial, padrao.inicial, arg.xpath="//a/@href",
                      primeiraExtracao=T) {
   #browser()
@@ -245,7 +260,7 @@ crawler <- function (url.inicial, padrao.inicial, arg.xpath="//a/@href",
   i <- 1 # inicia contador do while
   while ( i  <= length(linksMandatoVec)) {
     aux <- pegaLinks1(linksMandatoVec[i], padrao.inicial) # guarda resultado em auxiliar
-    linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)]) # acrescenta só o que for novo
+    linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)], after=0) # acrescenta só o que for novo
     i <- i + 1 # incrementa contador
     print(i) # só pra ver evolução
     print(length(linksMandatoVec)) # evolução do laço
@@ -298,12 +313,14 @@ primeiraExtracao[grep("view",primeiraExtracao)[3]]
 
 crawler3 <- function (url.inicial, padrao.inicial, arg.xpath="//a/@href",
                      primeiraExtracao=T) {
-  browser()
+  #browser()
   linksMandatoVec <- pegaLinks1(url.inicial, padrao.inicial, arg.xpath) # inicia o crawler
   if( primeiraExtracao) linksMandatoVec <- linksMandatoVec[3:4] ## joga fora o q não presta da primeira ver
   padrao.inicial <- "mandato" ## altera para buscar apenas com palavra mandato
+  
   aux <- pegaLinks1(linksMandatoVec[1], padrao.inicial) # guarda resultado em auxiliar
   linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
+  
   aux <- pegaLinks1(linksMandatoVec[2], padrao.inicial) # guarda resultado em auxiliar
   linksMandatoVec <- append(linksMandatoVec, aux[!(aux %in% linksMandatoVec)])
   vec <- as.character(2003:2010)
@@ -359,7 +376,7 @@ extracaoFinal1[1]
 
 ## Agora fazendo o download
 
-folder<-paste("D:\\2014\\aulas\\IESP\\scripts\\textMining\\discursos\\Lula", #remember to change the directory according to where your files are
+folder <- paste("D:\\2014\\aulas\\IESP\\scripts\\textMining\\discursos\\Lula", #remember to change the directory according to where your files are
         1:length(extracaoFinal1), ".pdf",sep="")
 
 for(x in 1:length(extracaoFinal1))
