@@ -9,6 +9,7 @@
 #######################################################
 
 install.packages("arm")
+library(arm)
 
 ################
 # Naive Bayes ##
@@ -39,8 +40,20 @@ install.packages("arm")
 ## pegando wordlist do opensubtitle
 #http://invokeit.wordpress.com/frequency-word-lists/
 
+
+
 setwd("D:\\2014\\aulas\\IESP\\scripts\\textMining")
-load(opensubtitles.RData)
+
+open2 <- read.delim2("pt_br.txt", header=T)
+
+getwd()
+dir()
+?save
+#save(tabela, file="tabela.RData")
+load("opensubtitles.RData")
+head(opensub)
+#opensub <- open2
+names(opensub) <-c("words", "freq")
 
 # Falta ainda calcularmos Prob(w_k|w_i) e Prob(w_k)
 # Com relação à Prob(w_k), iremos usar um truque para evitar a necessidade de computá-lo
@@ -64,7 +77,7 @@ load(opensubtitles.RData)
 
 
 library(arm)
-
+opensub$words <- as.character(opensub$words)
 ?adist
 
 distancia <- adist( opensub$words,opensub$words[1])
@@ -112,6 +125,19 @@ likelihood <- invlogit( mean(distancia) - distancia)
 df$likelihood <- likelihood
 summary(likelihood)
 
+set.seed(2)
+df1 <- df[sample(1:nrow(df), 2000),]
+
+p <- ggplot(df1, aes(y=likelihood, x = factor(1)))
+p + geom_boxplot()
+
+
+p <- ggplot(df1, aes(x=distancia, y=likelihood))
+(p <- p + geom_line())
+p + geom_point()
+
+
+
 ## os dados tão demorando pra cair, e depois cai rápido demais
 ## preciso ajustar
 unique(likelihood)
@@ -125,13 +151,37 @@ unique(likelihood)
 ## alguma sugestão?
 
 distNormalizada <- (mean(distancia) - distancia)/sd(distancia) # padronizar
+likelihood <- invlogit(distNormalizada)
+df$likelihood <- likelihood
+
+set.seed(2)
+df1 <- df[sample(1:nrow(df), 2000),]
+
+p <- ggplot(df1, aes(y=likelihood, x = factor(1)))
+p + geom_boxplot()
+
+
+p <- ggplot(df1, aes(x=distancia, y=likelihood))
+(p <- p + geom_line())
+p + geom_point()
+
+
 
 # e fazer transformação não-linear
 
-distNormalizada1 <- (distNormalizada*40 -113)
+distNormalizada1 <- distNormalizada*40 -113
 sort(unique(distNormalizada1))
 df$likelihood1 <- invlogit( distNormalizada1)
 sort(unique(df$likelihood1))
+
+set.seed(2)
+df1 <- data.frame(likelihood1=unique(df$likelihood1),
+                  distancia=unique(df$distancia))
+
+p <- ggplot(df1, aes(x=distancia, y=likelihood1))
+(p <- p + geom_line())
+p + geom_point()
+
 
 ## melhorou bastante
 
@@ -143,7 +193,7 @@ sugestao <- function(palavra) {
   #browser()
   distancia <- adist( opensub$words,palavra)
   distNormalizada <- (mean(distancia) - distancia)/sd(distancia)
-  distNormalizada1 <- (distNormalizada*40 -117)
+  distNormalizada1 <- (distNormalizada*40 -113)
   likelihood <- invlogit( distNormalizada1)
   posicao <- which.max(df$priori*likelihood)
   df$words[posicao]
@@ -193,7 +243,7 @@ library(microbenchmark)
 ## Compiler fornece um compilador para suas funções, ou seja, suas funções vão ser compiladas
 ##
 
-myFunction <-function() { for(i in 1:10000) { 1*(1+1) } }
+myFunction <- function() { for(i in 1:10000) { 1*(1+1) } }
 
 myCompiledFunction <- cmpfun(myFunction) # Compiled function
 
