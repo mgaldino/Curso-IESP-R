@@ -98,19 +98,69 @@ SpecificTerms <- function(lda.model,n=1) {
   topterms
 }
 
+set.seed(4)
 lda <- LDA(dtm1, k)
 
 # t termos mais prováveis por tópico
-t <- 10
-terms(lda, t)
+t <- 15
+View(terms(lda, t))
+
+## vamos olhar o Topic 18
 
 # t termos com prob acima de minimo
 minimo <- .05
 terms(lda, t, threshold=minimo)
 
 
+
 # tópicos mais prováveis por documentos
 head(topics(lda))
 
 
-## Agora vamos fazer algumas visualizações
+## Agora vamos fazer algumas análises dos resultados
+
+# Here I construct a dataframe that scores each document according to
+# how closely its content
+# matches up with each topic.  
+# The closer the score is to 0, the more likely its content matches
+# up with a particular topic.
+
+
+nytTopics <- posterior(lda)$topics
+dfnytTopics <- as.data.frame(nytTopics)
+dim(dfnytTopics)
+head(dfnytTopics)
+names(dfnytTopics) <- paste("topic", names(dfnytTopics), sep="")
+dfnytTopics$docs <- row.names(dfnytTopics)
+head(dfnytTopics)
+## linhas somas 1
+## um doc está dividido em vários tópicos
+## soma tem que dar 100%
+library(ggplot2)
+
+
+library(compiler)
+
+rowMax <- cmpfun (function(X) apply(X, 1, max))
+tmp <- rowMax(dfnytTopics)
+length(tmp)
+
+
+
+which.colMax <- cmpfun (function(X) apply(X, 2, which.max))
+indexMax <- which.colMax(dfnytTopics)
+dim(dfnytTopics)
+
+## banco original
+base <- as.matrix(dtm1)
+base <- as.data.frame(base)
+base <- data.frame(docs=row.names(as.matrix(dtm1)), base)
+dim(base)
+base[1:6, 1:5]
+
+base[indexMax , ]
+
+
+index <- base[,1]
+
+sample(which(df.emails.topics$"1" > .95), 10)
