@@ -78,18 +78,3 @@ ocorrência de cada palavra.
 - Assumindo um modelo desse tipo, a LDA tenta descobrir
 os tópicos mais prováveis de terem gerado nossas frases
 
-
-========================================================
-```{r}
-set.seed(2)
-m <- rnorm(10000, 1.78, 0.077)
-f <- rnorm(10000, 1.63, 0.073)
-a <- m+f
-```
-
-Slide With Plot
-========================================================
-
-```{r, echo=FALSE}
-hist(a, main="Mistura de duas t-student")
-```
