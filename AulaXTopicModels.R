@@ -35,14 +35,14 @@
 ## bag-of-words assumption
 
 # pacotes
-library(XML)
-if(require(MCMCpack) == F){install.packages("MCMCpack"); library(MCMCpack)}
-if(require(tm) == F){install.packages('tm'); library(tm)}
-if(require(SnowballC) == F){install.packages('SnowballC'); library(SnowballC)}
-if(require(data.table) == F){install.packages('data.table'); library(data.table)}
-if(require(ggplot2) == F){install.packages('ggplot2'); library(ggplot2)}
-if(require(seqinr) == F) {install.packages("seqinr"); library(seqinr)}
-if(require(RTextTools) == F) {install.packages("RTextTools"); library(RTextTools)}
+library("XML")
+if(require(MCMCpack) == F){install.packages("MCMCpack"); library("MCMCpack")}
+if(require(tm) == F){install.packages('tm'); library("tm")}
+if(require(SnowballC) == F){install.packages('SnowballC'); library("SnowballC")}
+if(require(data.table) == F){install.packages('data.table'); library("data.table")}
+if(require(ggplot2) == F){install.packages('ggplot2'); library("ggplot2")}
+if(require(seqinr) == F) {install.packages("seqinr"); library("seqinr")}
+if(require(RTextTools) == F) {install.packages("RTextTools"); library("RTextTools")}
 
 ######
 ## Análise de Dados de Revistas na Scielo
