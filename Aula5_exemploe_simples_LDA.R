@@ -31,11 +31,17 @@ dim(AssociatedPress)
 train <- AssociatedPress[1:100]
 test <- AssociatedPress[101:150]
 
+save(train, file= "trainAP.RData")
+setwd("D:/2014/aulas/IESP/scripts/Curso-IESP-R-aula")
+load("trainAP.RData")
+dim(train)
 # estima o modelo
 train.lda <- LDA(train,5)
 
 # extrai os tópicos
 (train.topics <- topics(train.lda))
+
+
 
 # calcula prob para novos documentos, com base no modelo
 # cross-validação...
@@ -55,7 +61,7 @@ test.topics[[2]]
 #################################
 
 data(NYTimes)
-set.seed(6)
+dim(NYTimes)
 nyt <- NYTimes
 
 extendedstopwords <- c("a","about","above","across","after",
@@ -77,16 +83,24 @@ dtm.control <- list(
   weighting = weightTf
 )
 
-
+# do pacote tm
 nyt1 <- Corpus(VectorSource(nyt1), readerControl = dtm.control) 
-
-# Limpando
-nyt1 <-tm_map(nyt1, stemDocument, language="english")
+class(nyt1)
+# Limpando no R 3.0
+nyt1 <- tm_map(nyt1, stemDocument, language="english")
 nyt1 <- tm_map(nyt1, tolower) # convertendo para caixa baixa
 nyt1 <- tm_map(nyt1, removeWords, extendedstopwords) # removendo palavras escolhidas
 nyt1 <- tm_map(nyt1, removeNumbers) # removendo numeros
 nyt1 <- tm_map(nyt1, removePunctuation) # removendo pontuacao
 nyt1 <- tm_map(nyt1, removeWords, stopwords("english")) # removendo stop words (snowball)
+
+# Limpando no R 3.1.1
+#nyt1 <- tm_map(nyt1, content_transformer(stemDocument, language="english"))
+nyt1 <- tm_map(nyt1, content_transformer(tolower)) # convertendo para caixa baixa
+#nyt1 <- tm_map(nyt1, content_transformer(removeWords, extendedstopwords)) # removendo palavras escolhidas
+nyt1 <- tm_map(nyt1, content_transformer(removeNumbers)) # removendo numeros
+nyt1 <- tm_map(nyt1, content_transformer(removePunctuation)) # removendo pontuacao
+#nyt1 <- tm_map(nyt1, content_transformer(removeWords(stopwords("english")))) # removendo stop words (snowball)
 
 # criando uma DocumentTermMatrix 
 # é usada como argumento de LDA
