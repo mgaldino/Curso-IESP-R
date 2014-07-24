@@ -173,7 +173,7 @@ head(topics(lda))
 # The closer the score is to 0, the more likely its content matches
 # up with a particular topic.
 
-
+## 4 new york e 5 white house
 nytTopics <- posterior(lda)$topics
 dfnytTopics <- as.data.frame(nytTopics)
 dim(dfnytTopics)
@@ -182,10 +182,9 @@ names(dfnytTopics) <- paste("topic", names(dfnytTopics), sep="")
 dfnytTopics$docs <- row.names(dfnytTopics)
 head(dfnytTopics)
 
-summary(dfnytTopics$topic17)
 # qtos docs topico 17 é o maior??
 
-library(compiler)
+library("compiler")
 
 which.rowMax <- cmpfun (
   function(df,n) {
@@ -194,12 +193,13 @@ which.rowMax <- cmpfun (
     return(tmp)
     }
   )
+
 n <- nrow(dfnytTopics)
 tmp <- which.rowMax(dfnytTopics[, -n], n )
-topic1 <- dfnytTopics[which(tmp==1),]
+topic4 <- dfnytTopics[which(tmp==4),]
 
 dfTemp <- as.character(nyt1)
-docEscolhido <-  dfTemp[which(tmp==1)]
+docEscolhido <-  dfTemp[which(tmp==4)]
 set.seed(2)
 docEscolhido[sample(1:length(docEscolhido), 15) ]
 terms(lda, t)[,1]
