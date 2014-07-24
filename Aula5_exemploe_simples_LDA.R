@@ -19,8 +19,40 @@ if(require(data.table) == F){install.packages('data.table'); library(data.table)
 if(require(ggplot2) == F){install.packages('ggplot2'); library(ggplot2)}
 if(require(seqinr) == F) {install.packages("seqinr"); library(seqinr)}
 if(require(RTextTools) == F) {install.packages("RTextTools"); library(RTextTools)}
+if(require(topicmodels) == F) {install.packages("topicmodels"); library(topicmodels)}
 
-## Carregando manchetes do NYT
+
+data(AssociatedPress)
+AssociatedPress
+dim(AssociatedPress)
+# divide o banco entre dados de treinamento
+# e dados de teste ou validação
+
+train <- AssociatedPress[1:100]
+test <- AssociatedPress[101:150]
+
+# estima o modelo
+train.lda <- LDA(train,5)
+
+# extrai os tópicos
+(train.topics <- topics(train.lda))
+
+# calcula prob para novos documentos, com base no modelo
+# cross-validação...
+test.topics <- posterior(train.lda,test)
+
+# escolhe o tópico com maior prob. como tópico dos novos docs.
+(test.topics1 <- apply(test.topics$topics, 1, which.max))
+
+# resultado com docs nas linhas
+# topicos nas colunas
+# prob nas células
+test.topics[[2]]
+
+#################################
+## Ex. 2, mais completo        ##
+## Carregando manchetes do NYT ##
+#################################
 
 data(NYTimes)
 set.seed(6)
