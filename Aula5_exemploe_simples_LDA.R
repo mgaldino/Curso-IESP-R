@@ -66,13 +66,11 @@ dim(dtm)
 View(dtm) ## erro. Tem que usar inspect
 inspect(dtm[1:10,1:20])
 
-dim(dtm)
-dtm <- removeSparseTerms(dtm,0.998)
-dim(dtm)
-
 x <- rowSums(as.matrix(dtm))
 index <- which(x==0)
 dtm1 <- dtm[-index, ]
+dim(dtm1)
+
 ## Precisamos determinar o númerode tópicos nos dados
 ## como número de cluster em análise de cluster
 ## nesse exemplo, já temos
@@ -105,7 +103,10 @@ lda <- LDA(dtm1, k)
 t <- 15
 View(terms(lda, t))
 
-## vamos olhar o Topic 18
+## vamos olhar o Topic 17
+## Aprov Eleitoral? Bush, Clinton etc.
+
+
 
 # t termos com prob acima de minimo
 minimo <- .05
@@ -133,34 +134,27 @@ head(dfnytTopics)
 names(dfnytTopics) <- paste("topic", names(dfnytTopics), sep="")
 dfnytTopics$docs <- row.names(dfnytTopics)
 head(dfnytTopics)
-## linhas somas 1
-## um doc está dividido em vários tópicos
-## soma tem que dar 100%
-library(ggplot2)
 
+summary(dfnytTopics$topic17)
+# qtos docs topico 17 é o maior??
 
 library(compiler)
 
-rowMax <- cmpfun (function(X) apply(X, 1, max))
-tmp <- rowMax(dfnytTopics)
-length(tmp)
+which.rowMax <- cmpfun (
+  function(df,n) {
+    tmp <- numeric(length=n)
+    for ( i in 1:n) tmp[i] <- which.max(df[i,-ncol(df)])
+    return(tmp)
+    }
+  )
+n <- nrow(dfnytTopics)
+tmp <- which.rowMax(dfnytTopics[, -n], n )
+topic1 <- dfnytTopics[which(tmp==1),]
+
+dfTemp <- as.character(nyt1)
+docEscolhido <-  dfTemp[which(tmp==1)]
+set.seed(2)
+docEscolhido[sample(1:length(docEscolhido), 15) ]
+terms(lda, t)[,1]
 
 
-
-which.colMax <- cmpfun (function(X) apply(X, 2, which.max))
-indexMax <- which.colMax(dfnytTopics)
-dim(dfnytTopics)
-
-## banco original
-base <- as.matrix(dtm1)
-base <- as.data.frame(base)
-base <- data.frame(docs=row.names(as.matrix(dtm1)), base)
-dim(base)
-base[1:6, 1:5]
-
-base[indexMax , ]
-
-
-index <- base[,1]
-
-sample(which(df.emails.topics$"1" > .95), 10)
