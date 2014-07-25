@@ -2,7 +2,7 @@
 #### Manoel Galdino 24/07.2014 ####
 #### Aula 7 - Projeto Retórica ####
 ###################################
-
+#install.packages("RJSONIO")
 
 # pacotes
 library("XML")
@@ -15,6 +15,7 @@ library("seqinr")
 library("RTextTools")
 library("topicmodels")
 library("compiler")
+library("RJSONIO")
 
 
 ##
@@ -26,6 +27,7 @@ setwd("D:\\2014\\aulas\\IESP\\scripts\\Curso-IESP-R-aula\\Data")
 load("DTM.RData") # Document Term Matrix
 load("Autor_Matrix.RData") # Author Matrix
 load("Info.RData")
+load("20131030_infoPeqExpArrumado_legis_54.RData")
 
 ## script em outro diretório
 setwd("D:\\2014\\aulas\\IESP\\scripts\\Curso-IESP-R-aula")
@@ -42,42 +44,69 @@ exp.agenda.vonmon.comp <- cmpfun( exp.agenda.vonmon)
 
 # Vamos tentar com função compilada
 
-system.time(topics  <- exp.agenda.vonmon.comp(term.doc = as.matrix(dtm),
+topics  <- exp.agenda.vonmon.comp(term.doc = as.matrix(dtm),
                                               authors = autorMatrix,
                              n.cats = 70,
-                             verbose = T, kappa = 400))
+                             verbose = T, kappa = 400)
+
+
+
 
 ## topics tem o output da func
 ## precisamos extrair os tópicos
+setwd("D:\\2014\\aulas\\IESP\\scripts\\Curso-IESP-R-aula\\Data")
+load("20131031_70_topics_peq_Exp_54_legislatura.RData")
+load("20131030_topics_peq_Exp_54_legislatura.RData")
 
-autorTopicOne <- NULL
-for( i in 1:dim(topics[[1]])[1]){
-  autorTopicOne[i] <- which.max(topics[[1]][i,])
+# extraiTopicoAutor <- function (topic) {
+#   autorTopicOne <- NULL
+#   for( i in 1:dim(topic[[1]])[1]){
+#     autorTopicOne[i] <- which.max(topic[[1]][i,])
+#   }
+#   return(autorTopicOne)
+# }
+
+extraiTopicoAutor1 <- function (topic) {
+  autorTopicOne <- NULL
+  for( i in 1:dim(topic[[1]][[1]])[1]){
+    autorTopicOne[i] <- which.max(topic[[1]][[1]][i,])
+  }
+  return(autorTopicOne)
 }
-autorTopicPerc <- prop.table(topics[[1]], 1) # compute the proportion of documents from each author to each topic
+
+#autorTopicOne <- extraiTopicoAutor(topics)
+
+autorTopicOne <- extraiTopicoAutor1(topic70)
+
+head(autorTopicOne)
+
+# autorTopicPerc <- prop.table(topics[[1]], 1) # compute the proportion of documents from each author to each topic
+
+autorTopicPerc <- prop.table(topic70[[1]][[1]], 1) # compute the proportion of documents from each author to each topic
+head(autorTopicPerc)
 
 autorTopicOne <- as.data.frame(autorTopicOne)
 
-for( i in 1:nrow(autorTopicOne)){
-  autorTopicOne$enfase[i] <- autorTopicPerc[i,which.max(autorTopicPerc[i,])]
-}
-
-json_file <- "https://github.com/Demoulidor/Dados/tree/master/deputadosFederais/deputados.json"
-json_data <- fromJSON(paste(readLines(json_file), collapse=""))
-
-df <- data.frame(nome=json_data[[1]][[1]]$nome,
-                 url=json_data[[1]][[1]]$url,
-                 foto=gsub("full\\/", "", json_data[[1]][[1]]$images[[1]]$path),
-                 email=gsub("mailto:", "", json_data[[1]][[1]]$email),
-                 id=json_data[[1]][[1]]$id_dep)
-
-for ( i in 2:length(json_data[[1]])) {
-  df <- rbind(df, data.frame(nome=json_data[[1]][[i]]$nome,
-                             url=json_data[[1]][[i]]$url,
-                             foto=gsub("full\\/", "", json_data[[1]][[i]]$images[[1]]$path),
-                             email=gsub("mailto:", "", json_data[[1]][[i]]$email),
-                             id=json_data[[1]][[i]]$id_dep))
-}
+# for( i in 1:nrow(autorTopicOne)){
+#   autorTopicOne$enfase[i] <- autorTopicPerc[i,which.max(autorTopicPerc[i,])]
+# }
+# 
+# json_file <- "https://github.com/Demoulidor/Dados/tree/master/deputadosFederais/deputados.json"
+# json_data <- fromJSON(paste(readLines(json_file), collapse=""))
+# 
+# df <- data.frame(nome=json_data[[1]][[1]]$nome,
+#                  url=json_data[[1]][[1]]$url,
+#                  foto=gsub("full\\/", "", json_data[[1]][[1]]$images[[1]]$path),
+#                  email=gsub("mailto:", "", json_data[[1]][[1]]$email),
+#                  id=json_data[[1]][[1]]$id_dep)
+# 
+# for ( i in 2:length(json_data[[1]])) {
+#   df <- rbind(df, data.frame(nome=json_data[[1]][[i]]$nome,
+#                              url=json_data[[1]][[i]]$url,
+#                              foto=gsub("full\\/", "", json_data[[1]][[i]]$images[[1]]$path),
+#                              email=gsub("mailto:", "", json_data[[1]][[i]]$email),
+#                              id=json_data[[1]][[i]]$id_dep))
+# }
 
 
 autorTopicOne$uf <- infoPeqExpArrumado$uf[!duplicated(infoPeqExpArrumado$autor)]
@@ -87,17 +116,63 @@ autorTopicOne$autor <- unique(infoPeqExpArrumado$autor)
 
 head(autorTopicOne)
 
-autorTopicVis <- merge(autorTopicOne, df, by.x="autor", by.y="nome", all.x=T)
+## Qtde de deputados em cada tópico
+qplot(autorTopicOne$autorTopicOne, geom="bar", binwidth=1)
+table(autorTopicOne$autorTopicOne)
+
+
+
+wordTopicPerc <- prop.table(topic70[[1]][[2]], 1) #  compute the proportion of documents from each author to each topic
+wordTopicPerc[1:5,]
+rowSums(wordTopicPerc[1:5,]) # tem q dar 1
+
+
+StemsTopico <- function(matrix){
+  # fun??o que recebe uma matriz stem \times topics e retorna um vetor cujo tamanho 
+  # e igual ao numero de topicos e cada elemento representa at? 10 Stems mais 
+  # importantes daquele topico.
+  wordTopic <- data.frame()
+  for( i in 1:dim(matrix)[1]){
+    wordTopic[i, 1] <- which.max(matrix[i,])
+    wordTopic[i, 2] <- matrix[i, wordTopic[i, 1]]
+  }
+  wordTopic$topic <- rownames(matrix)  
+  wordTopic <- wordTopic[order(wordTopic[,1], -wordTopic[,2]), ]
+  vec <- NULL
+  for (i in 1:length(unique(wordTopic$V1))){
+    vec[i] <- paste(subset(wordTopic, V1 == i)[1:10, 3], collapse = " ")  
+  }
+  # retirando NAs
+  vec <- gsub("NA", "", vec)
+  vec <- trimSpace(vec)
+  vec <- gsub(" ", "; ", vec)
+  return(vec)
+}
+
+wordTopic <- StemsTopico(matrix = topic70[[1]][[2]])
+
+##Analisa as palavras mais importantes do topico
+## e determina o conteúdo do tópico
+
+# The goal is to identify words that are common among documents that discuss the same 
+# topic and rare in documents that were generated by another topic. To identify the 
+# set of words that satisfy these properties, I select 10 words with the highest mutual information 
+# with a topic to label the clusters, which provides a principled method for cluster 
+# labeling appropriate for any unsupervised learning technique.
+
+head(wordTopic)
+
+# autorTopicVis <- merge(autorTopicOne, df, by.x="autor", by.y="nome", all.x=T)
 
 # arrumando sites dos deputados
-autorTopicVis$url <- gsub("http:\\/\\/", "http:\\/\\/www.", autorTopicVis$url)
+# autorTopicVis$url <- gsub("http:\\/\\/", "http:\\/\\/www.", autorTopicVis$url)
 
 # rotulando topicos
-rotulos <- read.table('20131031_rotulos1.txt', sep = "\t", header = T)
+# rotulos <- read.table('20131031_rotulos1.txt', sep = "\t", header = T)
 
-autorTopicVis <- merge(autorTopicVis, rotulos[,c('topico','rotulo')], by.x='autorTopicOne', by.y='topico', all.x=T)
+# autorTopicVis <- merge(autorTopicVis, rotulos[,c('topico','rotulo')], by.x='autorTopicOne', by.y='topico', all.x=T)
 
-write.table(autorTopicVis , file="20131031_autorTopicVis_70.csv", sep=",", row.names=T)
+# write.table(autorTopicVis , file="20131031_autorTopicVis_70.csv", sep=",", row.names=T)
 
 ## Ref
 # Paper do Gimmer
